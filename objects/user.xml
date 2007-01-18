@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<user>
+	<attribute name="login" type="String" references=""/>
+	<attribute name="password" type="String" references=""/>
+	<attribute name="lastname" type="String" references=""/>
+	<attribute name="firstname" type="String" references="" default=""/>
+	<attribute name="usergroup" type="integer" references="usergroup"/>
+</user>
