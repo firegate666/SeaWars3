@@ -8,7 +8,8 @@ require_once dirname(__FILE__) . '/source/All.inc.php';
 
 $mysql = new MySQLInterface();
 $user = new User(2);
-print_a($user);
+$user->set('login', 'matsche');
+$user->save();
 print_a($mysql->getLastErrors());
 print_a($mysql->getQueries());
 ?>

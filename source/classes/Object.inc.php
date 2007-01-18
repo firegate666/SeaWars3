@@ -4,22 +4,22 @@ abstract class Object {
 	 * object classname lowercase
 	 */
 	protected $classname = null;
-	
+
 	/**
 	 * object data definition
 	 */
 	protected $definition = array ();
-	
+
 	/**
 	 * object id
 	 */
 	protected $id = null;
-	
+
 	/**
 	 * object attributes
 	 */
 	protected $data = array ();
-	
+
 	/**
 	 * object information
 	 */
@@ -58,6 +58,10 @@ abstract class Object {
 	 * save object attributes only
 	 */
 	protected function save_attributes() {
+		global $mysql;
+	  	$where[]= array('field'=>'objectid', 'val'=>$this->id);
+		$mysql->delete('attribute', $where);
+		
 		foreach ($this->definition as $key => $val) {
 			if (isset ($this->data[$key])) {
 				// TODO: validate
@@ -78,12 +82,20 @@ abstract class Object {
 	 * save object to database
 	 */
 	public function save() {
-		global $mysql;
-		$this->type['__createdon'] = Date :: now();
-		$this->type['__createdby'] = $this->loggedin();
-		$this->type['__changedon'] = null;
-		$this->type['__changedby'] = null;
-		$this->id = $mysql->insert('object', $this->type);
+		if (empty ($this->id)) {
+			$this->info['__createdon'] = Date :: now();
+			$this->info['__createdby'] = $this->loggedin();
+			$this->info['__changedon'] = null;
+			$this->info['__changedby'] = null;
+			$this->id = $this->insert('object', $this->info);
+		} else {
+			$this->info['__changedon'] = Date :: now();
+			$this->info['__changedby'] = $this->loggedin();
+		  	$where[]= array('field'=>'id', 'val'=>$this->id);
+			$where[]= array('field'=>'type', 'val'=>$this->classname,'comp'=>'LIKE');
+			global $mysql;
+			$mysql->update('object', $this->info, $where);
+		}
 		$this->save_attributes();
 		return $this->id;
 	}
@@ -104,7 +116,7 @@ abstract class Object {
 	/**
 	 * execute query
 	 */
-	protected function select($fields, $tables, $where=array(), $orderby=array()) {
+	protected function select($fields, $tables, $where = array (), $orderby = array ()) {
 		global $mysql;
 		return $mysql->select($fields, $tables, $where, $orderby);
 	}
@@ -113,11 +125,11 @@ abstract class Object {
 	 * load object from database
 	 */
 	public function load() {
-		$this->type['type'] = $this->classname;
-		$this->type['__createdon'] = null;
-		$this->type['__createdby'] = null;
-		$this->type['__changedon'] = null;
-		$this->type['__changedby'] = null;
+		$this->info['type'] = $this->classname;
+		$this->info['__createdon'] = null;
+		$this->info['__createdby'] = null;
+		$this->info['__changedon'] = null;
+		$this->info['__changedby'] = null;
 		if ($this->id != null) {
 			$fields = array ();
 			$tables = array (
@@ -134,13 +146,13 @@ abstract class Object {
 			);
 			$result = $this->select($fields, $tables, $where);
 			if (!empty ($result)) {
-				$this->type['__createdon'] = $result[0]['__createdon'];
-				$this->type['__createdby'] = $result[0]['__createdby'];
-				$this->type['__changedon'] = $result[0]['__changedon'];
-				$this->type['__changedby'] = $result[0]['__changedby'];
+				$this->info['__createdon'] = $result[0]['__createdon'];
+				$this->info['__createdby'] = $result[0]['__createdby'];
+				$this->info['__changedon'] = $result[0]['__changedon'];
+				$this->info['__changedby'] = $result[0]['__changedby'];
 				foreach ($result as $row) {
 					if (isset ($this->definition[$row['name']]))
-						$this->data[$row['name']]=$row['value'];
+						$this->data[$row['name']] = $row['value'];
 				}
 			}
 		}

@@ -53,6 +53,27 @@ class MySQLInterface {
 		$this->mysql = new MySQL();
 	}
 	
+	public function delete($table, $where) {
+		$query = 'DELETE FROM '.$table.' ';
+		$query .= 'WHERE '.implode('', $this->createWhere($where)).';';
+		return $this->mysql->update($query);
+	}
+	
+	public function update($table, $data, $where) {
+		$query = 'UPDATE '.$table.' SET ';
+		$fields = array();
+		foreach($data as $key=>$val) {
+			if ($val === null)
+				$val = 'null';
+			else
+				$val = "'".$this->mysql->escape($val)."'";
+			$fields[] = $key.'='.$val;
+		}
+		$query .= implode(', ', $fields).' ';
+		$query .= 'WHERE '.implode('', $this->createWhere($where)).';';
+		return $this->mysql->update($query);
+	}
+	
 	public function insert($table, $data) {
 		$query  = 'INSERT INTO '.$table.' ';
 		$query .= '('.implode(', ', array_keys($data)).')';
