@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<webfile>
+	<attribute name="name" type="String" notnull="true"/>
+	<attribute name="path" type="String" notnull="true"/>
+	<attribute name="type" type="String" notnull="false"/>
+	<attribute name="size" type="String" notnull="false"/>
+</webfile>

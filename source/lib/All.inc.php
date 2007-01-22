@@ -1,6 +1,4 @@
 <?php
-	require_once dirname(__FILE__).'/functions.inc.php';
-
 	require_once dirname(__FILE__).'/Logger.inc.php';
 	require_once dirname(__FILE__).'/Date.inc.php';
 

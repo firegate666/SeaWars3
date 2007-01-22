@@ -1,4 +1,9 @@
 <?
+/**
+ * print object to console
+ *
+ * @param mixed $array
+ */
 function print_a($array) {
 	echo ("<pre>\n");
 	print_r($array);

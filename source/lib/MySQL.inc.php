@@ -8,10 +8,22 @@ class MySQL extends SQL {
 
 	protected $failed = false;
 
+	/**
+	 * add log entry
+	 *
+	 * @param unknown_type $msg
+	 * @param unknown_type $loglevel
+	 */
 	protected function addlog($msg, $loglevel) {
 		FileLogger::write("QUERY: ".$msg, $loglevel);
 	}
 
+	/**
+	 * add error
+	 *
+	 * @param unknown_type $type
+	 * @param unknown_type $query
+	 */
 	protected function adderror($type, $query='none') {
 		$this->failed();
 		$this->lasterrors[] = "$type: ".mysql_error()."; Last query: ".$query;
@@ -60,7 +72,7 @@ class MySQL extends SQL {
 	function insert($query) {
 		$this->connect();
 		$this->queries[] = $query;			
-		$this->addlog($query, 8);		
+		$this->addlog($query, LOGL_ACTION);		
 		$result = mysql_query($query) or $this->adderror("insert", $query);
 		$id = mysql_insert_id();
 		return $id;
@@ -75,7 +87,7 @@ class MySQL extends SQL {
 	function select($query, $assoc = true) {
 		$this->connect();
 		$this->queries[] = $query;	
-		$this->addlog($query, 9);		
+		$this->addlog($query, LOGL_DEBUG);		
 		$result = MYSQL_QUERY($query) or $this->adderror("select", $query);
 		$return = array ();
 		if (!$this->failed) {
@@ -98,12 +110,16 @@ class MySQL extends SQL {
 	function executeSql($query) {
 		$this->connect();
 		$this->queries[] = $query;			
-		$this->addlog($query, 9);		
+		$this->addlog($query, LOGL_DEBUG);		
 		$result = MYSQL_QUERY($query) or $this->adderror("execute", $query);
 		$result = MYSQL_FETCH_ARRAY($result, MYSQL_ASSOC);
 		return $result;
 	}
 
+	/**
+	 * set query failed
+	 *
+	 */
 	function failed() {
 		$this->failed = true;
 	}
@@ -116,7 +132,7 @@ class MySQL extends SQL {
 	function update($query, $mayfail = false) {
 		$this->connect();
 		$this->queries[] = $query;			
-		$this->addlog($query, 5);
+		$this->addlog($query, LOGL_ACTION);
 		if ($mayfail)
 			@$result = MYSQL_QUERY($query) or $this->failed();
 		else if(!$mayfail)
@@ -128,6 +144,9 @@ class MySQL extends SQL {
 		return $rows;
 	}
 
+	/**
+	 * escape value
+	 */
 	public function escape($string) {
 		return mysql_escape_string($string);
 	} 

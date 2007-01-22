@@ -27,17 +27,31 @@ abstract class Object {
 
 	/**
 	 * set attribute
+	 * 
+	 * @param	$key	String	name of attribute
+	 * @param	$value	String	value of attribute
 	 */
 	public function set($key, $value) {
-		$this->data[$key] = $value;
+		// only set if key is defined for object
+		if (isset($this->definition[$key])) {
+			$this->data[$key] = $value;
+			return true;
+		} else
+			return false
 	}
 
 	/**
 	 * get attribute
+	 * 
+	 * @param	$key	String	name of attribute
+	 * @return	$value	String	value of attribute
+	 *
 	 */
 	public function get($key) {
 		if (isset ($this->data[$key]))
 			return $this->data[$key];
+		else if (isset ($this->info[$key]))
+			return $this->info[$key];
 		else
 			return null;
 	}
@@ -58,10 +72,10 @@ abstract class Object {
 	 * save object attributes only
 	 */
 	protected function save_attributes() {
-		global $mysql;
-	  	$where[]= array('field'=>'objectid', 'val'=>$this->id);
-		$mysql->delete('attribute', $where);
+		// delete all attributes, if existing
+		$this->delete('attribute', array('field'=>'objectid', 'val'=>$this->id));
 		
+		// save attributes
 		foreach ($this->definition as $key => $val) {
 			if (isset ($this->data[$key])) {
 				// TODO: validate
@@ -78,6 +92,13 @@ abstract class Object {
 		}
 	}
 
+	protected function delete($table='object', $where=array()) {
+		global $mysql;
+		if (empty($where))
+			$where[]= array('field'=>'id', 'val'=>$this->id);
+		$mysql->delete($table, $where);
+	}
+	
 	/**
 	 * save object to database
 	 */
@@ -162,6 +183,19 @@ abstract class Object {
 		$parser = new ObjectDefinitionParser($this->classname);
 		$def = $parser->parse();
 		$this->definition = $def['ATTRIBUTE'];
+	}
+	
+	/**
+	 * get list of objects
+	 *
+	 * @param unknown_type $where
+	 * @param unknown_type $orderby
+	 * @param unknown_type $limit
+	 * @param unknown_type $limitstart
+	 */
+	public function getlist($where=array(), $orderby=array(), $limit=null, $limitstart=0) {
+		// TODO
+		return array();
 	}
 }
 ?>

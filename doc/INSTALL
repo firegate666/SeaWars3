@@ -1,0 +1,22 @@
+1. Unzip, untar and upload everything to your webdirectory.
+
+2. Set folder and file permissions to
+
+cache	777/666
+config	755/644
+doc		755/644
+objects	755/644
+source	755/644
+sql		755/644
+xslt	755/644
+upload	777/666
+
+3a. run /path/to/your/webdir/install.php and follow instructions
+for databse setup and system configuration
+
+or
+
+3b. edit /config/config.inc.php manually and execute database scripts
+from /sql
+
+4. finished

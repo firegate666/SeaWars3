@@ -1,9 +1,11 @@
 <?
-error_reporting(E_ALL);
-session_save_path('./cache/');
+require_once dirname(__FILE__) . '/source/static.inc.php';
+require_once dirname(__FILE__) . '/source/functions.inc.php';
+require_once dirname(__FILE__) . '/config/config.inc.php';
+
+session_save_path(get_config('cachepath','/tmp/'));
 session_start();
 
-require_once dirname(__FILE__) . '/config/config.inc.php';
 require_once dirname(__FILE__) . '/source/All.inc.php';
 
 $mysql = new MySQLInterface();

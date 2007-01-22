@@ -1,0 +1,7 @@
+Generic features in abstract class "Object"
+- save/load/delete
+- search
+
+Special features in subclass, e.g. User/login
+
+Object definition as xml in /objects/classname.xml

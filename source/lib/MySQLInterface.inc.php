@@ -19,16 +19,24 @@ class MySQLInterface {
 	
 	private $mysql;
 	
+	/**
+	 * @see MySQL#connect()
+	 */
 	public function connect() {
 		$this->mysql->connect();
 	}
 	
+	/**
+	 * @see MySQL#disconnect()
+	 */
 	public function disconnect() {
 		$this->mysql->disconnect();
 	}
 	
 	/**
 	 * return array of last errors
+	 * 
+	 * @return	String[]	last errors
 	 */
 	public function getLastErrors() {
 		return $this->mysql->getLastErrors();
@@ -36,6 +44,7 @@ class MySQLInterface {
 
 	/**
 	* returns number of queries executed
+	* 
 	* @return	int	number of queries
 	*/
 	public function getQuerycount() {
@@ -44,6 +53,8 @@ class MySQLInterface {
 
 	/**
 	 * Return all queries of this instance
+	 * 
+	 * @return	String[]	last queries
 	 */
 	public function getQueries() {
 		return $this->mysql->getQueries();
@@ -53,12 +64,27 @@ class MySQLInterface {
 		$this->mysql = new MySQL();
 	}
 	
+	/**
+	 * Delete
+	 *
+	 * @param String $table	tablename
+	 * @param mixed $where	where condition	@see MySQLInterface#select()
+	 * @return int	number of affected rows
+	 */
 	public function delete($table, $where) {
 		$query = 'DELETE FROM '.$table.' ';
 		$query .= 'WHERE '.implode('', $this->createWhere($where)).';';
 		return $this->mysql->update($query);
 	}
 	
+	/**
+	 * update
+	 *
+	 * @param unknown_type $table
+	 * @param unknown_type $data
+	 * @param unknown_type $where	@see MySQLInterface#select()
+	 * @return unknown
+	 */
 	public function update($table, $data, $where) {
 		$query = 'UPDATE '.$table.' SET ';
 		$fields = array();
@@ -74,6 +100,13 @@ class MySQLInterface {
 		return $this->mysql->update($query);
 	}
 	
+	/**
+	 * insert
+	 *
+	 * @param unknown_type $table
+	 * @param unknown_type $data
+	 * @return unknown
+	 */
 	public function insert($table, $data) {
 		$query  = 'INSERT INTO '.$table.' ';
 		$query .= '('.implode(', ', array_keys($data)).')';
@@ -89,6 +122,8 @@ class MySQLInterface {
 	}
 	
 	/**
+	 * select
+	 * 
 	 * @param	String[]	$fields	array of databasefields, if empty or null
 	 * all fields are selected
 	 * @param	String[][]	$orderby	array(array('orderby' => $name,
@@ -103,22 +138,26 @@ class MySQLInterface {
 		$where = $this->createWhere($where);
 
 		$statement = $this->buildStatement($fields, $tables, $where, $orderby);
+
+		$statement = '';
+		$statement .= 'SELECT '.implode(',', $fields);
+		$statement .= ' FROM '.implode(',', $tables);
+		if(!empty($where)) {
+			$statement .= ' WHERE '.implode('', $where);
+		}
+		if(!empty($orderby)) {
+			$statement .= ' ORDER BY '.implode(',', $orderby);
+		}
+		
 		return $this->mysql->select($statement);		
 	}
 	
-	private function buildStatement($fields, $tables, $where, $orderby) {
-		$result = '';
-		$result .= 'SELECT '.implode(',', $fields);
-		$result .= ' FROM '.implode(',', $tables);
-		if(!empty($where)) {
-			$result .= ' WHERE '.implode('', $where);
-		}
-		if(!empty($orderby)) {
-			$result .= ' ORDER BY '.implode(',', $orderby);
-		}
-		return $result.";";
-	}
-	
+	/**
+	 * create where statement
+	 *
+	 * @param unknown_type $where
+	 * @return unknown
+	 */
 	private function createWhere($where){
 		$result = array();
 		for($i = 0; $i < count($where); $i++) {
@@ -154,6 +193,14 @@ class MySQLInterface {
 		return $result;
 	}
 
+	/**
+	 * create fields statement, escape array
+	 *
+	 * @param unknown_type $fields
+	 * @param unknown_type $surround
+	 * @param unknown_type $default
+	 * @return unknown
+	 */
 	private function createFields($fields, $surround = '', $default = null) {
 		$result = array();
 		if(is_array($fields) && !empty($fields) && ($fields != null)) {
@@ -167,6 +214,12 @@ class MySQLInterface {
 		return $result;
 	}
 
+	/**
+	 * create orderby
+	 *
+	 * @param unknown_type $orderby
+	 * @return unknown
+	 */
 	private function createOrderby($orderby) {
 		$result = array();
 		foreach($orderby as $item) {
