@@ -137,8 +137,6 @@ class MySQLInterface {
 		$orderby = $this->createOrderby($orderby);
 		$where = $this->createWhere($where);
 
-		$statement = $this->buildStatement($fields, $tables, $where, $orderby);
-
 		$statement = '';
 		$statement .= 'SELECT '.implode(',', $fields);
 		$statement .= ' FROM '.implode(',', $tables);
@@ -163,7 +161,7 @@ class MySQLInterface {
 		for($i = 0; $i < count($where); $i++) {
 			$next = $where[$i];
 			if(!isset($next['field']) || empty($next['field']))
-				die("field must be set for where-claus");
+				echo "field must be set for where-claus";
 			else
 				$next['field'] = $this->mysql->escape($next['field']);
 			if(!isset($next['comp']) || empty($next['field']))
@@ -177,7 +175,7 @@ class MySQLInterface {
 			else if(!empty($next['rawval']))
 				$next['val'] = $this->mysql->escape($next['rawval']);
 			else
-				die("No value set for where clause");
+				echo "No value set for where clause";
 
 			if(!isset($next['next']) || empty($next['next']))
 				if($i < (count($where)-1))

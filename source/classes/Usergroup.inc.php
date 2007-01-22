@@ -1,0 +1,4 @@
+<?
+class Usergroup extends Object {
+}
+?>

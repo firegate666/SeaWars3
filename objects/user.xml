@@ -4,5 +4,6 @@
 	<attribute name="password" type="String" notnull="true"/>
 	<attribute name="lastname" type="String" notnull="false"/>
 	<attribute name="firstname" type="String" notnull="false"/>
-	<attribute name="usergroup" relates="usergroup" notnull="false"/>
+
+	<relation name="usergroupid" relates="usergroup" notnull="false"/>
 </user>

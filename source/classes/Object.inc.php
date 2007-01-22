@@ -8,7 +8,12 @@ abstract class Object {
 	/**
 	 * object data definition
 	 */
-	protected $definition = array ();
+	protected $att_definition = array();
+	
+	/**
+	 * object relation definition
+	 */
+	protected $rel_definition = array();
 
 	/**
 	 * object id
@@ -18,7 +23,12 @@ abstract class Object {
 	/**
 	 * object attributes
 	 */
-	protected $data = array ();
+	protected $attributes = array ();
+	
+	/**
+	 * object relations
+	 */
+	protected $relations = array();
 
 	/**
 	 * object information
@@ -28,32 +38,43 @@ abstract class Object {
 	/**
 	 * set attribute
 	 * 
-	 * @param	$key	String	name of attribute
-	 * @param	$value	String	value of attribute
+	 * @param	String	$key	name of attribute
+	 * @param	String	$value	value of attribute
 	 */
 	public function set($key, $value) {
 		// only set if key is defined for object
-		if (isset($this->definition[$key])) {
-			$this->data[$key] = $value;
+		if (isset($this->att_definition[$key])) {
+			$this->attributes[$key] = $value;
 			return true;
+		// or maybe this is a relation? check class
+		} else if(isset($this->rel_definition[$key]) && (strtolower(get_class($value)) == $this->rel_definition[$key]['RELATES'])) {
+			$this->relations[$key] = $value;
+			return true;
+		// not found at all
 		} else
-			return false
+			throw new AttributeNotDefinedException($key);
 	}
 
 	/**
 	 * get attribute
 	 * 
-	 * @param	$key	String	name of attribute
-	 * @return	$value	String	value of attribute
+	 * @param	String	$key	name of attribute
+	 * @return	String	value of attribute
 	 *
 	 */
 	public function get($key) {
-		if (isset ($this->data[$key]))
-			return $this->data[$key];
-		else if (isset ($this->info[$key]))
+		// generic data?
+		if (isset ($this->info[$key]))
 			return $this->info[$key];
+		// attribute?
+		else if (isset ($this->attributes[$key]))
+			return $this->attributes[$key];
+		// relation?
+		else if (isset ($this->relations[$key]))
+			return $this->relations[$key];
+		// not defined
 		else
-			return null;
+			throw new AttributeNotDefinedException($key);
 	}
 
 	/**
@@ -63,9 +84,32 @@ abstract class Object {
 		return null;
 	}
 
+	/**
+	 * @see MySQLInterface#insert
+	 */
 	protected function insert($table, $data) {
 		global $mysql;
 		return $mysql->insert($table, $data);
+	}
+
+	/**
+	 * save object relations only
+	 */
+	protected function save_relations() {
+		// delete all relations, if existing
+		$this->delete('relation', array(array('field'=>'object1', 'val'=>$this->id)));
+		// save relations
+		foreach ($this->rel_definition as $key => $val) {
+			if (isset($this->relations[$key]) && ($this->rel_definition[$key]['RELATES']==$this->relations[$key]->classname)){
+				// TODO: validate
+				if (empty($this->relations[$key]->id)) // speichern wenn nicht geschehen
+					$this->relations[$key]->save();
+				$insert['object1'] = $this->id;
+				$insert['name'] = $key;
+				$insert['object2'] = $this->relations[$key]->id;
+				$this->insert('relation', $insert);
+			}
+		}
 	}
 
 	/**
@@ -73,25 +117,36 @@ abstract class Object {
 	 */
 	protected function save_attributes() {
 		// delete all attributes, if existing
-		$this->delete('attribute', array('field'=>'objectid', 'val'=>$this->id));
+		$this->delete('attribute', array(array('field'=>'objectid', 'val'=>$this->id)));
 		
 		// save attributes
-		foreach ($this->definition as $key => $val) {
-			if (isset ($this->data[$key])) {
+		foreach ($this->att_definition as $key => $val) {
+			if (isset ($this->attributes[$key])) {
 				// TODO: validate
 			} else {
 				if (isset ($val['DEFAULT']))
-					$this->data[$key] = $val['DEFAULT'];
+					$this->attributes[$key] = $val['DEFAULT'];
 				else
-					$this->data[$key] = null;
+					$this->attributes[$key] = null;
 			}
 			$insert['objectid'] = $this->id;
 			$insert['name'] = $key;
-			$insert['value'] = $this->data[$key];
+			$insert['value'] = $this->attributes[$key];
 			$this->insert('attribute', $insert);
 		}
 	}
 
+	/**
+	 * @see MySQLInterface#update
+	 */
+	protected function update($table, $data, $where) {
+		global $mysql;
+		return $mysql->update($table, $data, $where);
+	}
+
+	/**
+	 * @see MySQLInterface#delete
+	 */
 	protected function delete($table='object', $where=array()) {
 		global $mysql;
 		if (empty($where))
@@ -114,19 +169,19 @@ abstract class Object {
 			$this->info['__changedby'] = $this->loggedin();
 		  	$where[]= array('field'=>'id', 'val'=>$this->id);
 			$where[]= array('field'=>'type', 'val'=>$this->classname,'comp'=>'LIKE');
-			global $mysql;
-			$mysql->update('object', $this->info, $where);
+			$this->update('object', $this->info, $where);
 		}
 		$this->save_attributes();
+		$this->save_relations();
 		return $this->id;
 	}
 
 	/**
 	 * public constructor
 	 * 
-	 * @param	$id	int	id ob object
+	 * @param	int	$id	id ob object
 	 */
-	public function Object($id = null) {
+	public function __construct($id = null) {
 		if (!empty ($id))
 			$this->id = $id;
 		$this->classname = strtolower(get_class($this));
@@ -135,7 +190,7 @@ abstract class Object {
 	}
 
 	/**
-	 * execute query
+	 * @see MySQLInterface#select
 	 */
 	protected function select($fields, $tables, $where = array (), $orderby = array ()) {
 		global $mysql;
@@ -172,17 +227,44 @@ abstract class Object {
 				$this->info['__changedon'] = $result[0]['__changedon'];
 				$this->info['__changedby'] = $result[0]['__changedby'];
 				foreach ($result as $row) {
-					if (isset ($this->definition[$row['name']]))
-						$this->data[$row['name']] = $row['value'];
+					if (isset ($this->att_definition[$row['name']]))
+						$this->attributes[$row['name']] = $row['value'];
 				}
+				$this->load_relations();
 			}
-		}
+		} 
 	}
 
+	/**
+	 * load relations for object
+	 */
+	protected function load_relations() {
+			$fields = array ();
+			$tables = array (
+				'relation_view'
+			);
+			$where[] = array (
+				'field' => 'object1',
+				'val' => $this->id
+			);
+			$result = $this->select($fields, $tables, $where);
+			foreach($result as $relation) {
+				print_a($relation);
+				$obj = new $relation['type']($relation['object2']);
+				$this->relations[$relation['name']] = $obj;
+			}
+	}
+
+	/**
+	 * initialize object
+	 */
 	protected function initialize() {
 		$parser = new ObjectDefinitionParser($this->classname);
 		$def = $parser->parse();
-		$this->definition = $def['ATTRIBUTE'];
+		if (!empty($def['ATTRIBUTE']))
+			$this->att_definition = $def['ATTRIBUTE'];
+		if (!empty($def['RELATION']))
+			$this->rel_definition = $def['RELATION'];
 	}
 	
 	/**
