@@ -8,20 +8,15 @@ session_start();
 
 require_once dirname(__FILE__) . '/source/All.inc.php';
 
-$mysql = new MySQLInterface();
-$user = new User(2);
+//$xsl = new XSLTProcessor();
+//$doc = new DOMDocument();
+//
+//$doc->load('./xslt/index.xsl');
+//$xsl->importStyleSheet($doc);
+//
+//$doc->load('./objects/user.xml');
+//echo $xsl->transformToXML($doc);
 
-$usergroup = new Usergroup(10);
-
-$user->set('usergroupid', $usergroup);
-$user->save();
-
-//try {
-//	$user->get('gibtsnicht');
-//} catch(Exception $e) {
-//	print_a($e);
-//}
-
-print_a($mysql->getLastErrors());
-print_a($mysql->getQueries());
+//print_a($mysql->getLastErrors());
+//print_a($mysql->getQueries());
 ?>

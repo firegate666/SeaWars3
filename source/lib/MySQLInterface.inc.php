@@ -1,4 +1,7 @@
 <?php
+
+$mysql = new MySQLInterface();
+
 /**
  * Encapsulates the use of the mysql database
  * Queries are build from given arrays

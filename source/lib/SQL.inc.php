@@ -6,7 +6,7 @@
 abstract class SQL {
 
 	/** all queries are stored */
-	protected $queries;
+	protected $queries = array();
 
 	/**
 	* DB Ressource connection

@@ -6,5 +6,7 @@
 	require_once dirname(__FILE__).'/MySQL.inc.php';
 	require_once dirname(__FILE__).'/MySQLInterface.inc.php';
 
+	require_once dirname(__FILE__).'/XML.inc.php';
+
 	require_once dirname(__FILE__).'/ObjectDefinitionParser.inc.php';
 ?>
